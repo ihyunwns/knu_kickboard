@@ -1,0 +1,36 @@
+#video {
+    width: 100%;
+    height: 84%;
+    background-color: black;
+    border: none;
+    margin-bottom: 2px;
+}
+
+.section {
+    width: 100%;
+}
+
+.btn-section {
+    height: 15%;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+}
+
+button {
+    width: 50%;
+    border-radius: 5px;
+    border: none;
+    margin: 0 1px 0 1px;
+    color: gainsboro;
+    font-family: 'Pretendard SemiBold', sans-serif;
+    font-weight: bold;
+}
+
+#start {
+    background-color: #2e7d32;
+}
+
+#stop {
+    background-color: #b71c1c;
+}

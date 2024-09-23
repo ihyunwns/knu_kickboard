@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<div class="navigation" th:fragment="bar">
+    <ul class="nav">
+        <li class="nav-item">
+            <div class="project-name">Spring MVC</div>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/main">홈</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/chat">채팅</a>
+        </li>
+
+        <li class="nav-item ml-auto">
+            <div class="my-info" th:text="${id}">id</div>
+            <div class="my-info" th:text="${nickname}">nickname</div>
+        </li>
+        <li class="nav-item">
+            <div class="my-info" th:text="${role}">role</div>
+        </li>
+        <li class="nav-item">
+            <form role="form" id="logoutForm" th:action="@{/logout}" method="post">
+                <button type="submit" class="btn" style="color:#cccccc"> 로그아웃</button>
+            </form>
+        </li>
+    </ul>
+</div>

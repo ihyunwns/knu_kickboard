@@ -1,0 +1,39 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* HTML, body를 전체 화면에 맞춤 */
+html, body {
+    height: 100%;
+    background-color: antiquewhite;
+}
+
+/* 섹션들의 공통 스타일 */
+.section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 48%;
+    color: gainsboro;
+    font-size: 2.5em;
+    font-weight: bold;
+    border-radius: 20px;
+    margin: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 박스 그림자 추가 */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* 텍스트 그림자 추가 */
+}
+
+#crackdown {
+    background: linear-gradient(135deg, #b71c1c, #e53935); /* 그라데이션 효과 추가 */
+}
+
+#stats {
+    background: linear-gradient(135deg, #2e7d32, #4caf50); /* 그라데이션 효과 추가 */
+}
+
+h1 {
+    font-family: "Pretendard SemiBold", sans-serif;
+    letter-spacing: 2px;
+}
