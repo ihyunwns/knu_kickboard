@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 3
+names: ['2-_person_with_kickboard', 'helmet', 'person_with_kickboard']
+
+roboflow:
+  workspace: kickboard-c0lo3
+  project: kickboard-a75qx
+  version: 2
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/kickboard-c0lo3/kickboard-a75qx/dataset/2
