@@ -25,6 +25,7 @@ button {
     color: gainsboro;
     font-family: 'Pretendard SemiBold', sans-serif;
     font-weight: bold;
+    cursor: pointer;
 }
 
 #start {

@@ -23,7 +23,9 @@ html, body {
     margin: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 박스 그림자 추가 */
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* 텍스트 그림자 추가 */
+    cursor: pointer;
 }
+
 
 #crackdown {
     background: linear-gradient(135deg, #b71c1c, #e53935); /* 그라데이션 효과 추가 */

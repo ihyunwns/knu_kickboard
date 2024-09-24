@@ -60,8 +60,8 @@ startButton.onclick = async () => {
         // 사용자 미디어 (카메라) 접근
         mediaStream = await navigator.mediaDevices.getUserMedia({
             video: {
-                width: { ideal: 640 },
-                height: { ideal: 480 },
+                width: { ideal: 384 },
+                height: { ideal: 640 },
                 facingMode : {exact: "environment"},
                 frameRate: {ideal: 15, max:30}
             },
