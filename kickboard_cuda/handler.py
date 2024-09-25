@@ -8,7 +8,7 @@ import websockets
 from ultralytics import YOLO #YOLO 8
 
 
-model = YOLO(r"C:\Users\ihyun\Desktop\knup_kickboard\kickboard_cuda\runs\detect\grayscale_v3\weights\best.pt")
+model = YOLO(r"C:\Users\ihyun\Desktop\knup_kickboard\kickboard_cuda\runs\detect\grayscale_v4\weights\best.pt")
 model.to('cuda')
 
 async def handler(websocket, path):
