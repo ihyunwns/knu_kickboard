@@ -8,7 +8,7 @@ import websockets
 from ultralytics import YOLO #YOLO 8
 
 
-model = YOLO(r'C:\Users\ihyun\Desktop\knup_kickboard\kickboard_cuda\runs\detect\train2\weights\best.pt')
+model = YOLO(r"C:\Users\ihyun\Desktop\knup_kickboard\kickboard_cuda\runs\detect\grayscale_v3\weights\best.pt")
 model.to('cuda')
 
 async def handler(websocket, path):
@@ -26,7 +26,10 @@ async def handler(websocket, path):
                 img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
                 if img is not None:
-                    result = model.predict(img)
+                    gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                    gray_3channel = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2BGR)
+
+                    result = model.predict(gray_3channel, conf=0.6)
 
                     annotated_img = result[0].plot()
 
