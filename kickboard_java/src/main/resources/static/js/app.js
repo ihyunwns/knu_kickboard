@@ -2,6 +2,7 @@ const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
 const startButton = document.getElementById('start');
 const stopButton = document.getElementById('stop');
+const image = document.getElementById("annotatedImage");
 
 let mediaStream = null;
 let sendFrameInterval = null;
@@ -20,8 +21,13 @@ function connectWebSocket() {
     };
 
     socket.onmessage = (event) => {
-        // 서버로부터 메시지 수신 시 처리 (필요 시 구현)
-        console.log('서버 메시지:', event.data);
+        if (event.data instanceof ArrayBuffer) {
+            const blob = new Blob([event.data], {type: 'image/jpeg'});
+            image.src = URL.createObjectURL(blob);
+
+        } else {
+            console.log('fail');
+        }
     };
 
     socket.onclose = () => {
@@ -48,7 +54,7 @@ function sendFrame() {
                 socket.send(blob);
                 lastSendTime = currentTime();
             }
-        }, 'image/jpeg', 0.5); // 이미지 포맷과 품질 설정 (품질 범위: 0.0 ~ 1.0)
+        }, 'image/jpeg', 0.2); // 이미지 포맷과 품질 설정 (품질 범위: 0.0 ~ 1.0)
         }
 
     }
@@ -60,8 +66,8 @@ startButton.onclick = async () => {
         // 사용자 미디어 (카메라) 접근
         mediaStream = await navigator.mediaDevices.getUserMedia({
             video: {
-                width: { ideal: 384 },
-                height: { ideal: 640 },
+                width: { ideal: 640 },
+                height: { ideal: 384 },
                 facingMode : {exact: "environment"},
                 frameRate: {ideal: 15, max:30}
             },
@@ -92,5 +98,9 @@ stopButton.onclick = () => {
     if (socket) {
         socket.close();
     }
+
+    const image = document.getElementById(`annotatedImage`);
+    image.src = "/static/image/waitingStream.jpg";
+
     console.log("스트림 중지");
 };

@@ -8,7 +8,7 @@ import websockets
 from ultralytics import YOLO #YOLO 8
 
 
-model = YOLO('best.pt')
+model = YOLO(r'C:\Users\ihyun\Desktop\knup_kickboard\kickboard_cuda\runs\detect\train2\weights\best.pt')
 model.to('cuda')
 
 async def handler(websocket, path):
@@ -26,20 +26,7 @@ async def handler(websocket, path):
                 img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
                 if img is not None:
-                    result = model(img)
-
-                    detections = result[0].boxes
-                    is_wearing_helmet = False
-                    num_persons = 0
-
-                    for box in detections:
-                        cls = int(box.cls)
-                        if cls == 0:
-                            num_persons += 1
-                        elif cls == 39:
-                            is_wearing_helmet = True
-
-                    is_two_riders = num_persons >= 2
+                    result = model.predict(img)
 
                     annotated_img = result[0].plot()
 
@@ -47,11 +34,12 @@ async def handler(websocket, path):
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
 
-                    # 결과 출력
-                    print(f'{client_id}: 헬멧 착용 여부: {is_wearing_helmet}, 2인 탑승 여부: {is_two_riders}')
+                    success, encoded_image = cv2.imencode('.jpg', annotated_img)
+                    if success:
+                        await websocket.send(encoded_image.tobytes())
+                    else:
+                        print('Annotated 이미지 인코딩 실패')
 
-                    # 필요 시 클라이언트로 결과 전송
-                    # await websocket.send(f'헬멧 착용 여부: {is_wearing_helmet}, 2인 탑승 여부: {is_two_riders}')
                 else:
                     print('이미지 복원 실패')
             else:
