@@ -2,20 +2,44 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
     <title>킥보드 단속 프로젝트</title>
+
 </head>
 <link href="/static/css/crackdown.css" rel="stylesheet"/>
 <body>
+<div class="container">
     <div class="section">
         <video id="video" autoplay muted playsinline style="display: none"></video>
         <canvas id="canvas" style="display: none;"></canvas>
-        <img src="/static/image/waitingStream.jpg" id="annotatedImage" alt="Annotated Image" />
+        <div class="image-container">
+            <img src="" style="display: none" id="annotatedImage" alt="Annotated Image" />
+            <div class="waitingText">스트림 대기 중...</div>
+            <script>
+                const waitingText = document.querySelector('.waitingText');
+                let dots = 0;
+                setInterval(() => {
+                    dots = (dots + 1) % 4; // 0, 1, 2, 3 -> 점 3개까지 표시
+                    waitingText.textContent = '스트림 대기 중' + '.'.repeat(dots);
+                }, 500); // 0.5초마다 점 업데이트
+
+            </script>
+        </div>
     </div>
-    <div class="btn-section">
-        <button id="start">START</button>
-        <button id="stop">STOP</button>
+    <div class="control-panel">
+        <div class="btnSection">
+            <button id="start">START</button>
+            <button id="stop">STOP</button>
+        </div>
+        <div class="selectSection">
+            <label for="selectBox"></label><select id="selectBox">
+                <option value="" selected disabled>Mode</option>
+            </select>
+        </div>
+
     </div>
-    <script src="/static/js/app.js"></script>
+</div>
+<script src="/static/js/app.js"></script>
 
 </body>
 </html>
