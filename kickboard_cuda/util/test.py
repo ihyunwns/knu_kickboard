@@ -24,12 +24,13 @@ tracker = DeepSort(
 
 IOU_THRESHOLD = 0.4 # 킥보드와 사람의 IOU 임계값, 이 값에 따라서 같은 객체 그룹에 속할 지 판단이 됨
 VIOLATION_THRESHOLD = 10 # 위반으로 간주할 프레임 수
+NOT_VIOLATION_THRESHOLD = 10 # 위반 오인 감지에 대한 위반 프레임 초기화 임계값
 SPEED_THRESHOLD = 200 # 속도 임계값
 
 track_history = {}
 
 # 비디오 캡처
-video_path = r"C:\Users\ihyun\Desktop\킥보드 단속 데이터셋\test_helmet2.mp4"
+video_path = r"C:\Users\ihyun\Desktop\킥보드 단속 데이터셋\test.mp4"
 cap = cv2.VideoCapture(video_path)
 
 frame_idx = 0
@@ -66,6 +67,13 @@ while True:
     # tracks 리스트에는 현재 프레임에서 추적되고 있는 객체들의 현재 상태만을 포함한다.
     # 각 track 객체는 현재 위치와 클래스 정보 등을 담고 있는데 추적 중인 객체의 고유 ID를 가지고 있으며, 이 ID를 통해 동일한 객체를 여러 프레임에 걸쳐 식별할 수 있다.
 
+    # 추적 종료된 객체 처리
+    for track_id in list(track_history.keys()):
+        # 만약 현재 추적 중인 트랙 리스트에 track_id가 없다면, 해당 트랙이 추적 종료된 것으로 간주
+        if track_id not in [track.track_id for track in tracks]:
+            del track_history[track_id]  # track_history에서 해당 트랙 제거
+            print(f"Track ID {track_id} removed from track history")
+
     # 클래스별로 트랙 분류, # tracks 리스트에서 클래스 이름과 is_confirmed 인것만 골라서 트랙에 저장
     kickboard_tracks = [track for track in tracks if track.det_class == 'kickboard' and track.is_confirmed()]
     person_tracks = [track for track in tracks if track.det_class in ['with_helmet', 'without_helmet'] and track.is_confirmed()]
@@ -97,6 +105,7 @@ while True:
         # 트랙 히스토리에 킥보드 ID가 없으면 초기화
         if 'violation_frames' not in track_history[kickboard_id]:
             track_history[kickboard_id]['violation_frames'] = 0
+            track_history[kickboard_id]['not_violation_frames'] = 0
             track_history[kickboard_id]['associated_persons'] = []
 
         associated_persons = []
@@ -141,8 +150,6 @@ while True:
 
             speed_difference = abs(kickboard_speed - person_speed)
 
-            print(f"kickboard {kickboard_id} and person {person.track_id}'s speed_difference: {speed_difference}")
-
             # IOU 및 속도 차이를 기준으로 연관 여부 판단
             if iou > IOU_THRESHOLD and speed_difference < SPEED_THRESHOLD:
                 associated_persons.append(person)
@@ -153,7 +160,6 @@ while True:
 
         # 위반 여부 판단
         num_persons = len(track_history[kickboard_id]['associated_persons'])
-        print(f"associated_persons: {track_history[kickboard_id]['associated_persons']}")
         violation = False
 
         # 헬멧 미착용 여부 체크
@@ -168,8 +174,15 @@ while True:
 
         if violation:
             track_history[kickboard_id]['violation_frames'] += 1
+        else:
+            track_history[kickboard_id]['not_violation_frames'] += 1
+
+            if track_history[kickboard_id]['not_violation_frames'] >= NOT_VIOLATION_THRESHOLD:
+                track_history[kickboard_id]['violation_frames'] = 0
+                track_history[kickboard_id]['not_violation_frames'] = 0
 
         if track_history[kickboard_id]['violation_frames'] >= VIOLATION_THRESHOLD:
+            # TODO: DB 연결 후 위반 사항 저장
             print(f"Violation detected for kickboard {kickboard_id}")
 
     # 프레임 표시
