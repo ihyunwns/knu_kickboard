@@ -1,13 +1,19 @@
+import os
+
 import cv2
 import numpy as np
+import time
+
 from tensorflow.python.keras.saving.saved_model.utils import training_lib
 from ultralytics import YOLO  # YOLOv8
 from deep_sort_realtime.deepsort_tracker import DeepSort
 
 from util import compute_iou, convert_tlwh_to_xyxy, is_helmet_position_valid
+from save import save_violation_image
+from save import save_violation_db
 
 # 모델 초기화
-model = YOLO(r"C:\Users\ihyun\Desktop\knup_kickboard\kickboard_cuda\runs\detect\kickboard_v5\weights\best.pt")
+model = YOLO(r"C:\Users\ihyun\Desktop\knup_kickboard\kickboard_cuda\runs\detect\kickboard_v62\weights\best.pt")
 model.to('cuda') # GPU
 
 # 클래스 이름
@@ -71,7 +77,40 @@ while True:
     for track_id in list(track_history.keys()):
         # 만약 현재 추적 중인 트랙 리스트에 track_id가 없다면, 해당 트랙이 추적 종료된 것으로 간주
         if track_id not in [track.track_id for track in tracks]:
+
+            violation_types = []
+            violation_durations = {}
+            violation_start_times = {}
+            if track_history[track_id]['helmet_violation_ongoing']:
+                violation_duration = time.time() - track_history[track_id]['helmet_violation_start_time']
+                violation_types.append('HELMET')
+                violation_durations['HELMET'] = violation_duration
+                violation_start_times['HELMET'] = track_history[track_id]['helmet_violation_start_time']
+                print(f"킥보드 {track_id} 헬멧 미착용 위반 종료 (추적 종료), 지속 시간: {violation_duration}초")
+
+
+            if track_history[track_id]['overload_violation_ongoing']:
+                violation_duration = time.time() - track_history[track_id]['overload_violation_start_time']
+                violation_types.append('2-PERSON')
+                violation_durations['2-PERSON'] = violation_duration
+                violation_start_times['2-PERSON'] = track_history[track_id]['overload_violation_start_time']
+                print(f"킥보드 {track_id} 2인 탑승 위반 종료 (추적 종료), 지속 시간: {violation_duration}초")
+
+            if violation_types:
+                if len(violation_types) == 2:
+                    violation_type = 'BOTH'
+                    violation_duration = max(violation_durations.values())
+                    violation_date = min(violation_start_times.values())
+                else:
+                    violation_type = violation_types[0]
+                    violation_duration = violation_durations[violation_type]
+                    violation_date = violation_start_times[violation_type]
+
+                image_url = track_history[track_id]['saved_image_folder']
+                save_violation_db(str(track_id), violation_type, violation_date, violation_duration, image_url)
+
             del track_history[track_id]  # track_history에서 해당 트랙 제거
+
             print(f"Track ID {track_id} removed from track history")
 
     # 클래스별로 트랙 분류, # tracks 리스트에서 클래스 이름과 is_confirmed 인것만 골라서 트랙에 저장
@@ -90,7 +129,23 @@ while True:
         if track_id not in track_history:
             track_history[track_id] = {
                 'positions': [],
-                'timestamps': []
+                'timestamps': [],
+                'associated_persons': [],
+
+                # 위반 사항 포착 프레임
+                'helmet_violation_frames': 0,
+                'overload_violation_frames': 0,
+                'non_helmet_violation_frames': 0,
+                'non_overload_violation_frames': 0,
+
+                # 위반 사항 기록 플래그
+                'helmet_violation_ongoing': False,
+                'overload_violation_ongoing': False,
+
+                'helmet_violation_start_time': None,
+                'overload_violation_start_time': None,
+
+                'saved_image_folder' : None
             }
 
         # 모든 객체의 위치 및 타임 스탬프 업데이트
@@ -101,12 +156,6 @@ while True:
     for kickboard in kickboard_tracks:
         kickboard_id = kickboard.track_id
         kickboard_bbox = kickboard.to_ltrb()
-
-        # 트랙 히스토리에 킥보드 ID가 없으면 초기화
-        if 'violation_frames' not in track_history[kickboard_id]:
-            track_history[kickboard_id]['violation_frames'] = 0
-            track_history[kickboard_id]['not_violation_frames'] = 0
-            track_history[kickboard_id]['associated_persons'] = []
 
         associated_persons = []
 
@@ -160,31 +209,66 @@ while True:
 
         # 위반 여부 판단
         num_persons = len(track_history[kickboard_id]['associated_persons'])
-        violation = False
 
+        helmet_violation = False
+        overload_violation = False
         # 헬멧 미착용 여부 체크
         for person in associated_persons:
             if person.det_class == 'without_helmet':
-                violation = True
+                helmet_violation = True
                 break # 한명이라도 헬멧 미착용이면 위반
 
         # 2인 탑승 여부 체크
         if num_persons > 1:
-            violation = True
+            overload_violation = True
 
-        if violation:
-            track_history[kickboard_id]['violation_frames'] += 1
+        need_to_save_frame = False
+
+        if helmet_violation:
+            track_history[kickboard_id]['helmet_violation_frames'] += 1
+            track_history[kickboard_id]['non_helmet_violation_frames'] = 0
+
+            if track_history[kickboard_id]['helmet_violation_frames'] >= VIOLATION_THRESHOLD:
+                if not track_history[kickboard_id]['helmet_violation_ongoing']:
+                    # 위반이 처음 시작 됨
+                    track_history[kickboard_id]['helmet_violation_ongoing'] = True
+                    track_history[kickboard_id]['helmet_violation_start_time'] = time.time()
+                    print(f"킥보드 {kickboard_id} 헬멧 미착용 위반 시작")
+
+                need_to_save_frame = True
+
         else:
-            track_history[kickboard_id]['not_violation_frames'] += 1
+            track_history[kickboard_id]['non_helmet_violation_frames'] += 1
 
-            if track_history[kickboard_id]['not_violation_frames'] >= NOT_VIOLATION_THRESHOLD:
-                track_history[kickboard_id]['violation_frames'] = 0
-                track_history[kickboard_id]['not_violation_frames'] = 0
+            if track_history[kickboard_id]['non_helmet_violation_frames'] >= NOT_VIOLATION_THRESHOLD:
 
-        if track_history[kickboard_id]['violation_frames'] >= VIOLATION_THRESHOLD:
-            # TODO: DB 연결 후 위반 사항 저장
-            print(f"Violation detected for kickboard {kickboard_id}")
+                track_history[kickboard_id]['helmet_violation_frames'] = 0
+                track_history[kickboard_id]['non_helmet_violation_frames'] = 0
 
+
+        if overload_violation:
+            track_history[kickboard_id]['overload_violation_frames'] += 1
+            track_history[kickboard_id]['non_overload_violation_frames'] = 0
+            if track_history[kickboard_id]['overload_violation_frames'] >= VIOLATION_THRESHOLD:
+                if not track_history[kickboard_id]['overload_violation_ongoing']:
+                    # 위반이 처음 시작 됨
+                    track_history[kickboard_id]['overload_violation_ongoing'] = True
+                    track_history[kickboard_id]['overload_violation_start_time'] = time.time()
+                    print(f"킥보드 {kickboard_id} 2인 탑승 위반 시작")
+
+                need_to_save_frame = True
+        else:
+            track_history[kickboard_id]['non_overload_violation_frames'] += 1
+
+            if track_history[kickboard_id]['non_overload_violation_frames'] >= NOT_VIOLATION_THRESHOLD:
+
+                track_history[kickboard_id]['overload_violation_frames'] = 0
+                track_history[kickboard_id]['non_overload_violation_frames'] = 0
+
+        if need_to_save_frame:
+            folder = save_violation_image(kickboard_id, frame, frame_idx, time.localtime())
+            if track_history[kickboard_id]['saved_image_folder'] is None:
+                track_history[kickboard_id]['saved_image_folder'] = folder
     # 프레임 표시
     for track in tracks:
         if not track.is_confirmed():
@@ -207,7 +291,7 @@ while True:
     for kickboard in kickboard_tracks:
         kickboard_id = kickboard.track_id
 
-        if track_history[kickboard_id]['violation_frames'] >= VIOLATION_THRESHOLD:
+        if track_history[kickboard_id]['helmet_violation_frames'] >= VIOLATION_THRESHOLD or track_history[kickboard_id]['overload_violation_frames'] >= VIOLATION_THRESHOLD:
             # 킥보드의 초기 바운딩 박스 설정
             ltrb = kickboard.to_ltrb()
             xmin, ymin, xmax, ymax = map(int, ltrb)

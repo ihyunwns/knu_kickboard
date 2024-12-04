@@ -10,21 +10,15 @@
 <body>
 <div class="container">
     <div class="section">
-        <video id="video" autoplay muted playsinline style="display: none"></video>
-        <canvas id="canvas" style="display: none;"></canvas>
-        <div class="image-container">
-            <img src="" style="display: none" id="annotatedImage" alt="Annotated Image" />
-            <div class="waitingText">스트림 대기 중...</div>
-            <script>
-                const waitingText = document.querySelector('.waitingText');
-                let dots = 0;
-                setInterval(() => {
-                    dots = (dots + 1) % 4; // 0, 1, 2, 3 -> 점 3개까지 표시
-                    waitingText.textContent = '스트림 대기 중' + '.'.repeat(dots);
-                }, 500); // 0.5초마다 점 업데이트
-
-            </script>
-        </div>
+        <video id="remoteVideo" autoplay playsinline muted></video>
+        <div id="waitingMessage" class="waitingText">스트림 대기 중</div>
+        <script>
+            let dots = 0;
+            setInterval(() => {
+                dots = (dots + 1) % 4; // 0, 1, 2, 3 -> 점 3개까지 표시
+                waitingText.textContent = '스트림 대기 중' + '.'.repeat(dots);
+            }, 500); // 0.5초마다 점 업데이트
+        </script>
     </div>
     <div class="control-panel">
         <div class="btnSection">
@@ -36,7 +30,6 @@
                 <option value="" selected disabled>Mode</option>
             </select>
         </div>
-
     </div>
 </div>
 <script src="/static/js/app.js"></script>

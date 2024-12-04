@@ -8,7 +8,6 @@
         display: flex;
         font-family: "Pretendard SemiBold", sans-serif;
         background-color: #15272d;
-
     }
 
     .container {
@@ -25,6 +24,8 @@
         background-color: black;
         justify-content: center;
         align-items: center;
+        display: flex; /* 중앙 정렬을 위해 추가 */
+        position: relative;
     }
 
     .control-panel {
@@ -49,25 +50,21 @@
         align-items: center;
     }
 
-    .image-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
+    #remoteVideo {
         height: 100%;
         width: 100%;
-        position: relative;
+        object-fit: contain; /* 종횡비 유지하며 화면에 맞춤 */
     }
+
     .waitingText {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
         text-align: center;
         color: whitesmoke;
         font-size: 28px;
-        position: absolute;
-    }
-
-    #annotatedImage {
-        width: 100%;
-        height: 100%;
-        border: none;
+        pointer-events: none; /* 클릭 이벤트 방지 */
     }
 
     #selectBox {
@@ -99,7 +96,6 @@
         appearance: none; /* 기본 스타일 제거 */
     }
 
-
     #start {
         background-color: #214332;
     }
@@ -111,111 +107,107 @@
 
 @media screen and (orientation: landscape) {
     body, html {
-    appearance: none;
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    font-family: "Pretendard SemiBold", sans-serif;
-    background-color: #15272d;
+        appearance: none;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        font-family: "Pretendard SemiBold", sans-serif;
+        background-color: #15272d;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+    }
 
-    -webkit-appearance: none;
-    -moz-appearance: none;
-}
+    .container {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
 
-.container {
-    display: flex;
-    width: 100%;
-    height: 100%;
-    border: none;
-}
+    .section {
+        width: 90%;
+        background-color: black;
+        justify-content: center;
+        align-items: center;
+        display: flex; /* 중앙 정렬을 위해 추가 */
+        position: relative;
+    }
 
-.section {
-    width: 90%;
-    background-color: black;
-    justify-content: center;
-    align-items: center;
-}
+    #remoteVideo {
+        height: 100%;
+        width: 100%;
+        object-fit: contain; /* 종횡비 유지하며 화면에 맞춤 */
+    }
 
-.control-panel {
-    width: 10%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    align-items: center;
-    margin-left: 30px;
-}
+    .control-panel {
+        width: 10%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+        margin-left: 30px;
+    }
 
-.btnSection {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-}
+    .btnSection {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
 
-.selectSection {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
+    .selectSection {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
 
-.image-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    width: 100%;
-    position: relative;
-}
-.waitingText {
-    text-align: center;
-    color: whitesmoke;
-    font-size: 28px;
-    position: absolute;
-}
+    .waitingText {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: whitesmoke;
+        font-size: 28px;
+        pointer-events: none; /* 클릭 이벤트 방지 */
+    }
 
-#annotatedImage {
-    width: 100%;
-    height: 100%;
-    border: none;
-}
+    #selectBox {
+        width: 60px;
+        margin-top: 10px;
+        padding: .8em .5em; /* 여백으로 높이 설정 */
+        border-radius: 0; /* iOS 둥근모서리 제거 */
+        font-size: 10px;
+    }
 
-#selectBox {
-    width: 60px;
-    margin-top: 10px;
-    padding: .8em .5em; /* 여백으로 높이 설정 */
-    border-radius: 0; /* iOS 둥근모서리 제거 */
-    font-size: 10px;
-}
+    button {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        color: white;
+        border: none;
 
-button {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    color: white;
-    border: none;
+        font-size: 14px;
+        font-family: "Pretendard SemiBold", sans-serif;
 
-    font-size: 14px;
-    font-family: "Pretendard SemiBold", sans-serif;
+        text-align: center;
 
-    text-align: center;
+        cursor: pointer;
+        margin-top: 10px;
+        padding: 0;
 
-    cursor: pointer;
-    margin-top: 10px;
-    padding: 0;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none; /* 기본 스타일 제거 */
+    }
 
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none; /* 기본 스타일 제거 */
-}
+    #start {
+        background-color: #214332;
+    }
 
-
-#start {
-    background-color: #214332;
-}
-
-#stop {
-    background-color: #432e2b;
-}
+    #stop {
+        background-color: #432e2b;
+    }
 }

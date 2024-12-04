@@ -1,68 +1,16 @@
-const video = document.getElementById('video');
-const canvas = document.getElementById('canvas');
+const remoteVideo = document.getElementById('remoteVideo');
 const startButton = document.getElementById('start');
 const stopButton = document.getElementById('stop');
-const image = document.getElementById("annotatedImage");
 const selectBox = document.getElementById('selectBox');
+const waitingText = document.getElementById('waitingMessage');
 
 let mediaStream = null;
-let sendFrameInterval = null;
-let socket = null;
+let peerConnection = null;
+let signalingSocket = null;
 
-let lastSendTime = 0;
-
-// WebSocket 연결 설정
-function connectWebSocket() {
-
-    socket = new WebSocket('wss://kickboard.duckdns.org:5000/video');
-    socket.binaryType = 'arraybuffer';
-
-    socket.onopen = () => {
-        console.log('WebSocket 연결 성공');
-        sendFrameInterval = setInterval(sendFrame, 100);
-    };
-
-    socket.onmessage = (event) => {
-        if (event.data instanceof ArrayBuffer) {
-            waitingText.style.display = 'none';
-            image.style.display = 'block';
-
-            const blob = new Blob([event.data], {type: 'image/jpeg'});
-            image.src = URL.createObjectURL(blob);
-
-
-        } else {
-            console.log('fail');
-        }
-    };
-
-    socket.onclose = () => {
-        console.log('WebSocket 연결 종료');
-    };
-
-    socket.onerror = (error) => {
-        console.error('WebSocket 에러:', error);
-    };
-}
-
-function sendFrame() {
-    if (video.readyState === video.HAVE_ENOUGH_DATA) {
-        const canvasContext = canvas.getContext('2d');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvasContext.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        // 이미지 품질과 해상도를 조절하여 데이터 크기 최적화
-        canvas.toBlob((blob) => {
-            if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(blob);
-            lastSendTime = currentTime();
-            }
-        }, 'image/jpeg', 0.3); // 이미지 포맷과 품질 설정 (품질 범위: 0.0 ~ 1.0)
-
-    }
-}
-
+const configuration = {
+    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+};
 
 window.onload = () => {
     navigator.mediaDevices.getUserMedia({ video: true })
@@ -88,79 +36,108 @@ window.onload = () => {
     .catch(err => {
         console.error('카메라 접근 실패:', err);
     });
-}
+};
 
-selectBox.onchange = async () => {
+startButton.onclick = async () => {
+    console.log('START')
     try {
-        if (mediaStream) {
-            mediaStream.getTracks().forEach(track => track.stop());
+        const selectedDeviceId = selectBox.value;
+
+        if (!selectedDeviceId) {
+            alert('카메라 장치를 선택해주세요.');
+            return;
         }
 
-        const selectedDeviceId = selectBox.value;
-        mediaStream = await navigator.mediaDevices.getUserMedia({
+        selectBox.disabled = true;
+
+        mediaStream = await navigator.mediaDevices.getUserMedia( {
             video: {
-                width: { ideal: 640 },
-                height: { ideal: 640 },
-                deviceId : {exact: selectedDeviceId},
-                frameRate: {ideal: 30}
-            },
-            audio: false
-        });
-        video.srcObject = mediaStream;
+                width: { min: 640, ideal: 640, max: 640 },
+                height: { min: 640, ideal: 640, max: 640 },
+                deviceId: { exact: selectedDeviceId },
+                frameRate: { ideal: 30, max: 30 }
+            }, audio: false });
 
-    } catch (error){
-        console.error('오류:', err);
-    }
+        peerConnection = new RTCPeerConnection(configuration);
 
-}
-
-// 스트림 시작
-startButton.onclick = async () => {
-    if(selectBox.value === "") {
-        alert('장치 미디어를 선택해주세요');
-        return;
-    }
-    try {
-        const selectedDeviceId = selectBox.value;
-
-        // 사용자 미디어 (카메라) 접근
-        mediaStream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                width: { ideal: 640 },
-                height: { ideal: 640 },
-                deviceId : {exact: selectedDeviceId},
-                frameRate: {ideal: 30}
-            },
-            audio: false
+        // 미디어 스트림의 모든 트랙을 RTCPeerConnection에 추가
+        mediaStream.getTracks().forEach(track => {
+            peerConnection.addTrack(track, mediaStream);
         });
 
-        video.srcObject = mediaStream
+        peerConnection.ontrack = event => {
+            console.log('서버로 부터 트랙 수신: ', event.track.kind);
+            if (event.track.kind === 'video') {
+                const [remoteStream] = event.streams;
+                remoteVideo.srcObject = remoteStream;
 
-        // WebSocket 연결
-        connectWebSocket();
-        console.log('스트림 시작');
+                remoteVideo.onplaying = () => {
+                    waitingText.style.display = 'none';
+                    remoteVideo.style.display = 'block';
+                }
 
-    } catch (err) {
-        console.error('오류:', err);
+                remoteVideo.onpause = () => {
+                    waitingText.style.display = 'block';
+                    remoteVideo.style.display = 'none';
+                }
+
+                remoteVideo.onended = () => {
+                    waitingText.style.display = 'block';
+                    remoteVideo.style.display = 'none';
+                }
+
+            }
+        }
+
+        //ICE 후보가 발견될 때마다 시그널링 서버로 전송
+        peerConnection.onicecandidate = event => {
+            if (event.candidate){
+                signalingSocket.send(JSON.stringify({'candidate': event.candidate }))
+            }
+        }
+
+        signalingSocket = new WebSocket('wss://kickboard.duckdns.org:5000');
+
+        signalingSocket.onopen = async () => {
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+            signalingSocket.send(JSON.stringify({'sdp': peerConnection.localDescription }))
+        }
+
+        signalingSocket.onmessage = async (event) => {
+            const message = JSON.parse(event.data);
+
+            if (message.sdp) {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(message.sdp));
+            } else if (message.candidate) {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
+            }
+        }
+
+    } catch (error) {
+        console.error('오류:', error);
     }
 };
 
-// 스트림 중지
 stopButton.onclick = () => {
-    if (sendFrameInterval) {
-        clearInterval(sendFrameInterval);
-        sendFrameInterval = null;
-    }
     if (mediaStream) {
         mediaStream.getTracks().forEach(track => track.stop());
-        video.srcObject = null;
+        mediaStream = null;
     }
-    if (socket) {
-        socket.close();
+    if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+    }
+    if (signalingSocket) {
+        signalingSocket.close();
+        signalingSocket = null;
     }
 
-    image.style.display = 'none';
+    remoteVideo.srcObject = null;
     waitingText.style.display = 'block';
+    remoteVideo.style.display = 'none';
 
-    console.log("스트림 중지");
+    selectBox.disabled = false;
+
+    console.log('스트림 중지');
 };
