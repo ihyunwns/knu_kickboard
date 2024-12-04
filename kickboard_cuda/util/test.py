@@ -36,7 +36,7 @@ SPEED_THRESHOLD = 200 # 속도 임계값
 track_history = {}
 
 # 비디오 캡처
-video_path = r"C:\Users\ihyun\Desktop\킥보드 단속 데이터셋\test.mp4"
+video_path = r"C:\Users\ihyun\Desktop\킥보드 단속 데이터셋\test_twoperson.mp4"
 cap = cv2.VideoCapture(video_path)
 
 frame_idx = 0

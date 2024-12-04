@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="eng">
+<head>
+    <meta charset="UTF-8">
+    <title>통계 페이지</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        body {
+            font-family: "Pretendard SemiBold", serif;
+            padding-top: 50px;
+            padding-bottom: 50px;
+        }
+        .image-container {
+            margin-bottom: 30px;
+        }
+        .image-container img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+</style>
+</head>
+<body>
+    <div class="container">
+        <!-- 페이지 헤더 -->
+        <div class="text-center mb-5">
+            <h1>위반자 사진</h1>
+            <p>트래킹 ID: <strong th:text="${violation.trackingId}">TR12345</strong></p>
+        </div>
+
+        <div style="margin-bottom: 5px">
+            <a href="/stats" class="btn btn-secondary">돌아가기</a>
+        </div>
+
+        <!-- 위반자 정보 섹션 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                위반자 정보
+            </div>
+            <div class="card-body">
+                <p><strong>위반 유형:</strong> <span th:text="${violation.violation_type}">HELMET</span></p>
+                <p><strong>위반 시간:</strong> <span th:text="${#temporals.format(violation.violation_date, 'yyyy-MM-dd HH:mm:ss')}">2024-04-27 14:30:00</span></p>
+                <p><strong>지속 시간:</strong> <span th:text="${violation.violation_duration}">1.6</span> <span>초</span></p>
+            </div>
+        </div>
+
+        <!-- 이미지 갤러리 섹션 -->
+        <div class="mb-4">
+            <h3>Images</h3>
+            <div class="row">
+                <div class="col-12 col-md-4 image-container" th:each="imageUrl : ${imageUrls}">
+                    <img th:src="${imageUrl}" alt="Violation Image">
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

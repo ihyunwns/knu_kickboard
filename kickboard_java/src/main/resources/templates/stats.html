@@ -1,15 +1,303 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-    <title>킥보드 단속 프로젝트</title>
+    <meta charset="UTF-8">
+    <title>통계 페이지</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="../static/css/stats.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div> 통계 </div>
-    <div> 그래프 </div>
-    <div> 일간, 주간, 월간</div>
-    <div> 총 단속, 헬멧 단속, 2인 탑승 단속</div>
+    <div class="container">
+        <!-- 페이지 헤더 -->
+        <div class="text-center mb-5">
+            <h1>통계 페이지</h1>
+        </div>
+
+        <!-- 오늘의 적발자 목록 섹션 -->
+        <div class="section-title">
+            <h2>오늘의 적발자 목록</h2>
+        </div>
+        <div class="table-responsive table-container">
+            <table class="table table-striped table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>일렬번호</th>
+                        <th>트래킹 ID</th>
+                        <th>위반 유형</th>
+                        <th>위반 시간</th>
+                        <th>지속 시간 (초)</th>
+                        <th>이미지</th>
+                    </tr>
+                </thead>
+                    <tbody id="content">
+                    <tr th:each="violation : ${todayViolations}">
+                        <td th:text="${violation.violation_id}">1</td>
+                        <td th:text="${violation.trackingId}">TR12345</td>
+                        <td th:text="${violation.violation_type}">HELMET</td>
+                        <td th:text="${#temporals.format(violation.violation_date, 'yyyy-MM-dd HH:mm:ss')}">2024-04-27 14:30:00</td>
+                        <td th:text="${violation.violation_duration}">1.6</td>
+                        <td>
+                            <form th:action="@{'/display/'+${violation.violation_id}}" method="get">
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    이미지 보기
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 주간 및 월간 그래프 섹션 -->
+        <div class="section-title">
+            <h2>주간, 월간 그래프</h2>
+        </div>
+        <div class="row">
+            <!-- 주간 그래프 -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        주간 위반 통계
+                    </div>
+                    <div class="card-body">
+                        <canvas id="weeklyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <!-- 월간 그래프 -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        월간 위반 통계
+                    </div>
+                    <div class="card-body">
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">
+            <h2>재미로 보는 벌금 현황</h2>
+        </div>
+        <div class="row">
+            <!-- 오늘의 벌금 -->
+            <div class="col-md-3 mb-4">
+                <div class="card fine-card today">
+                    <div class="card-body">
+                        <div class="fine-info">
+                            <h5>오늘의 벌금</h5>
+                            <p id="todayFine">10,000원</p>
+                        </div>
+                        <div class="fine-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 주간 벌금 -->
+            <div class="col-md-3 mb-4">
+                <div class="card fine-card weekly">
+                    <div class="card-body">
+                        <div class="fine-info">
+                            <h5>주간 벌금</h5>
+                            <p id="weeklyFine">50,000원</p>
+                        </div>
+                        <div class="fine-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 월간 벌금 -->
+            <div class="col-md-3 mb-4">
+                <div class="card fine-card monthly">
+                    <div class="card-body">
+                        <div class="fine-info">
+                            <h5>월간 벌금</h5>
+                            <p id="monthlyFine">200,000원</p>
+                        </div>
+                        <div class="fine-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 총 벌금 -->
+            <div class="col-md-3 mb-4">
+                <div class="card fine-card total">
+                    <div class="card-body">
+                        <div class="fine-info">
+                            <h5>총 벌금</h5>
+                            <p id="totalFine">500,000원</p>
+                        </div>
+                        <div class="fine-icon">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script th:inline="javascript">
+            /*<![CDATA[*/
+            var weeklyData = /*[[${weeklyCounts}]]*/ [];
+            var monthlyData = /*[[${monthlyCounts}]]*/ [];
+
+            var weeklyLabels = weeklyData.map(function(item) {
+                return item.period; // ViolationCountDTO의 'label' 필드
+            });
+            var weeklyCounts = weeklyData.map(function(item) {
+                return item.count; // ViolationCountDTO의 'count' 필드
+            });
+
+            // 월간 데이터에서 라벨과 카운트를 추출
+            var monthlyLabels = monthlyData.map(function(item) {
+                return item.period; // ViolationCountDTO의 'label' 필드
+            });
+            var monthlyCounts = monthlyData.map(function(item) {
+                return item.count; // ViolationCountDTO의 'count' 필드
+            });
+
+            // 주간 차트 생성
+        const ctxWeekly = document.getElementById('weeklyChart').getContext('2d');
+        const weeklyChart = new Chart(ctxWeekly, {
+            type: 'line',
+            data: {
+                labels: weeklyLabels,
+                datasets: [{
+                    label: '단속 횟수',
+                    data: weeklyCounts,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    fill: true,
+                    tension: 0.1,
+                    pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(75, 192, 192, 1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '주간 위반 통계'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top',
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: ''
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: '단속 횟수'
+                        },
+                        beginAtZero: true,
+                        ticks: {
+                            precision:0
+                        }
+                    }
+                }
+            }
+        });
+
+        // 월간 차트 생성
+        const ctxMonthly = document.getElementById('monthlyChart').getContext('2d');
+        const monthlyChart = new Chart(ctxMonthly, {
+            type: 'line',
+            data: {
+                labels: monthlyLabels,
+                datasets: [{
+                    label: '단속 횟수',
+                    data: monthlyCounts,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    fill: true,
+                    tension: 0.1,
+                    pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(75, 192, 192, 1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '월간 위반 통계'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top',
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: ''
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: '단속 횟수'
+                        },
+                        beginAtZero: true,
+                        ticks: {
+                            precision:0
+                        }
+                    }
+                }
+            }
+        });
+
+        var todayFine = /*[[${todayFine}]]*/ 10000;
+        var totalFine = /*[[${totalFine}]]*/ 500000;
+        var weeklyFine = /*[[${weeklyFine}]]*/ 50000;
+        var monthlyFine = /*[[${monthlyFine}]]*/ 200000;
+
+        document.getElementById('todayFine').textContent = todayFine.toLocaleString('ko-KR') + '원';
+        document.getElementById('totalFine').textContent = totalFine.toLocaleString('ko-KR') + '원';
+        document.getElementById('weeklyFine').textContent = weeklyFine.toLocaleString('ko-KR') + '원';
+        document.getElementById('monthlyFine').textContent = monthlyFine.toLocaleString('ko-KR') + '원';
+    /*]]>*/
+    </script>
 </body>
 </html>

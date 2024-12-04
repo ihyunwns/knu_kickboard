@@ -1,0 +1,96 @@
+body {
+    font-family: 'Pretendard SemiBold', serif; /* 기본 글꼴 설정 */
+    padding-top: 50px;
+    padding-bottom: 50px;
+    background-color: #f8f9fa; /* 부드러운 배경색 추가 */
+}
+.section-title {
+    margin-top: 40px;
+    margin-bottom: 20px;
+    color: #343a40; /* 제목 색상 변경 */
+    font-family: 'Pretendard SemiBold', serif; /* 섹션 제목에 글꼴 적용 */
+}
+.table-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+.card {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* 카드에 그림자 추가 */
+    border-radius: 12px; /* 카드 모서리 둥글게 */
+    background-color: #ffffff; /* 카드 배경색 흰색으로 설정 */
+}
+.card-header {
+    background-color: #ffffff; /* 카드 헤더 배경색 흰색 */
+    border-bottom: none;
+    font-weight: 700; /* 글꼴 두께 변경 */
+    color: #495057;
+    font-family: 'Pretendard SemiBold', serif; /* 카드 헤더에 글꼴 적용 */
+}
+.btn-primary {
+    display: flex;
+    align-items: center;
+}
+.btn-primary i {
+    margin-right: 5px; /* 아이콘과 텍스트 간 간격 추가 */
+}
+.export-buttons button {
+    margin: 0 10px;
+}
+
+#content{
+    font-family: Pretendard, serif;
+}
+
+/* 벌금 현황 카드 스타일 */
+.fine-card {
+    border-left: 5px solid; /* 왼쪽 테두리 색상 설정 */
+}
+.fine-card.today {
+    border-color: #17a2b8; /* 오늘의 벌금 색상 */
+}
+.fine-card.weekly {
+    border-color: #ffc107; /* 주간 벌금 색상 */
+}
+.fine-card.monthly {
+    border-color: #28a745; /* 월간 벌금 색상 */
+}
+.fine-card.total {
+    border-color: #dc3545; /* 총 벌금 색상 */
+}
+.fine-card .card-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.fine-card .fine-info {
+    flex: 1;
+}
+.fine-card .fine-info h5 {
+    margin: 0;
+    font-family: 'Pretendard SemiBold', serif;
+}
+.fine-card .fine-info p {
+    margin: 0;
+    font-size: 1.2rem;
+    font-family: 'Pretendard', serif;
+}
+.fine-card .fine-icon {
+    font-size: 3rem;
+    color: inherit;
+}
+
+/* 반응형 디자인 최적화 */
+@media (max-width: 768px) {
+    .section-title h2 {
+        font-size: 1.5rem; /* 작은 화면에서 섹션 제목 크기 줄이기 */
+    }
+    .card-header {
+        font-size: 1rem; /* 작은 화면에서 카드 헤더 글꼴 크기 줄이기 */
+    }
+    .fine-card .fine-info p {
+        font-size: 1rem; /* 작은 화면에서 벌금 금액 크기 줄이기 */
+    }
+    .fine-card .fine-icon {
+        font-size: 2rem; /* 작은 화면에서 아이콘 크기 줄이기 */
+    }
+}

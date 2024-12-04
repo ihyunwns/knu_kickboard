@@ -27,7 +27,12 @@ public class ServerConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/.well-known/**")
                 .addResourceLocations("classpath:/static/.well-known/");
+
+        registry.addResourceHandler("/images/**")
+                .addResourceLocations("file:///D:/violation/");
     }
+
+
 
     @Bean
     public ServletWebServerFactory servletContainer() {
