@@ -65,11 +65,17 @@ def save_violation_db(
         date_str = time.strftime('%Y%m%d', time.localtime(violation_date))
 
         cursor.execute('''
-                    SELECT COUNT(*) FROM VIOLATION WHERE violation_id LIKE %s
-                ''', (date_str + '%',))
-        count = cursor.fetchone()[0] + 1
+            SELECT MAX(CAST(SUBSTRING(violation_id, LENGTH(%s) + 2) AS UNSIGNED)) 
+            FROM VIOLATION 
+            WHERE violation_id LIKE %s
+        ''', (date_str, date_str + '%'))
+        max_id = cursor.fetchone()[0]
 
-        violation_id = f"{date_str}-{count:04d}"
+        if max_id is None:
+            violation_id = f'{date_str}-0001'  # 첫 번째 ID 생성 (숫자 부분 0001로 시작)
+        else:
+            violation_id = f'{date_str}-{max_id + 1:04}'  # 최대값에 1을 더하고 4자리 형식으로 생성
+
         insert_sql = '''INSERT INTO VIOLATION
                     (violation_id,
                     tracking_id,
